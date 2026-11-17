@@ -27,3 +27,9 @@ npm start
 ```
 
 실행 후 `http://127.0.0.1:4173`에서 확인할 수 있습니다. 별도의 패키지 설치는 필요하지 않습니다.
+
+## 공개 사이트
+
+GitHub Pages: <https://sming511.github.io/ETF-EDA/>
+
+`main` 브랜치가 변경되면 GitHub Actions가 정적 대시보드를 다시 배포합니다.

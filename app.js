@@ -1,4 +1,6 @@
-const API_PATH = "/api/etf";
+const API_PATH = location.hostname.endsWith("github.io")
+  ? "https://naver-etf-signal-board.todaycode-8480.chatgpt.site/api/etf"
+  : "/api/etf";
 const REFRESH_SECONDS = 60;
 
 const MARKET_META = {

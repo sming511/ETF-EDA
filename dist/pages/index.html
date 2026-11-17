@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="네이버 금융 ETF 데이터를 운용사, 시장, 상품별로 분석하는 실시간 대시보드">
+  <title>ETF Signal Board</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="ETF Signal Board 홈">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>ETF <strong>Signal Board</strong></span>
+    </a>
+    <div class="live-cluster">
+      <span class="live-badge"><i></i> LIVE</span>
+      <span id="updatedAt" class="updated-at">데이터 연결 중</span>
+      <button id="refreshButton" class="icon-button" type="button" aria-label="데이터 새로고침" title="데이터 새로고침">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v6h-6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">NAVER FINANCE · KOREA ETF MARKET</p>
+        <h1 id="pageTitle">시장 전체를 한눈에,<br><span>ETF 흐름을 더 선명하게.</span></h1>
+        <p class="hero-copy">네이버 금융의 국내 상장 ETF 시세를 60초마다 갱신합니다. 운용사와 시장, 상품 전략을 교차해 지금의 자금 흐름을 살펴보세요.</p>
+      </div>
+      <div class="market-pulse" aria-label="시장 상승 하락 비율">
+        <div class="pulse-head"><span>MARKET PULSE</span><span id="pulseLabel">—</span></div>
+        <div class="pulse-track"><i id="upPulse"></i><i id="flatPulse"></i><i id="downPulse"></i></div>
+        <div class="pulse-legend">
+          <span><i class="dot up"></i>상승 <b id="upCount">—</b></span>
+          <span><i class="dot flat"></i>보합 <b id="flatCount">—</b></span>
+          <span><i class="dot down"></i>하락 <b id="downCount">—</b></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="metrics" aria-label="ETF 시장 요약">
+      <article class="metric-card">
+        <div class="metric-label"><span>상장 ETF</span><small>LISTED</small></div>
+        <strong id="metricCount">—</strong>
+        <p id="metricCountNote">전체 종목 집계 중</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label"><span>총 시가총액</span><small>MARKET CAP</small></div>
+        <strong id="metricMarketCap">—</strong>
+        <p>조회 종목 기준 합산</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label"><span>거래대금</span><small>TURNOVER</small></div>
+        <strong id="metricTurnover">—</strong>
+        <p>당일 누적 거래대금</p>
+      </article>
+      <article class="metric-card accent-card">
+        <div class="metric-label"><span>평균 등락률</span><small>AVG. CHANGE</small></div>
+        <strong id="metricAverage">—</strong>
+        <p id="metricAverageNote">시장 방향 계산 중</p>
+      </article>
+    </section>
+
+    <section class="workspace">
+      <div class="toolbar-card">
+        <div class="view-tabs" role="tablist" aria-label="분석 화면">
+          <button class="view-tab active" data-view="overview" role="tab" aria-selected="true">시장 개요</button>
+          <button class="view-tab" data-view="manager" role="tab" aria-selected="false">운용사별</button>
+          <button class="view-tab" data-view="market" role="tab" aria-selected="false">시장별</button>
+          <button class="view-tab" data-view="product" role="tab" aria-selected="false">상품별</button>
+        </div>
+        <div class="refresh-note"><span id="countdown">60</span>초 후 자동 갱신</div>
+      </div>
+
+      <section class="filter-panel" aria-label="ETF 조회 조건">
+        <label class="search-field">
+          <span class="sr-only">ETF명 또는 종목코드 검색</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+          <input id="searchInput" type="search" placeholder="ETF명 또는 종목코드 검색" autocomplete="off">
+          <kbd>/</kbd>
+        </label>
+        <label class="select-field">
+          <span>운용사</span>
+          <select id="managerFilter"><option value="all">전체 운용사</option></select>
+        </label>
+        <label class="select-field">
+          <span>시장</span>
+          <select id="marketFilter"><option value="all">전체 시장</option></select>
+        </label>
+        <label class="select-field">
+          <span>상품 전략</span>
+          <select id="productFilter"><option value="all">전체 상품</option></select>
+        </label>
+        <button id="resetFilters" class="reset-button" type="button">초기화</button>
+      </section>
+
+      <div id="statusBanner" class="status-banner" hidden></div>
+
+      <section id="overviewPanel" class="analysis-panel active" data-panel="overview" aria-label="시장 개요">
+        <article class="panel-card manager-card">
+          <div class="panel-heading">
+            <div><p>운용사 경쟁 구도</p><h2>시가총액 상위 운용사</h2></div>
+            <span class="unit">단위: 조원</span>
+          </div>
+          <div id="managerBars" class="bar-chart skeleton-block"></div>
+        </article>
+        <article class="panel-card market-card">
+          <div class="panel-heading"><div><p>상품 구성</p><h2>시장 분류 비중</h2></div></div>
+          <div class="donut-layout">
+            <div id="marketDonut" class="donut skeleton-circle"><div><strong>—</strong><span>ETF</span></div></div>
+            <div id="marketLegend" class="donut-legend"></div>
+          </div>
+        </article>
+        <article class="panel-card movers-card">
+          <div class="panel-heading"><div><p>오늘의 변동</p><h2>등락률 상·하위</h2></div></div>
+          <div id="moversList" class="movers-list skeleton-block"></div>
+        </article>
+      </section>
+
+      <section id="managerPanel" class="analysis-panel" data-panel="manager" aria-label="운용사별 분석">
+        <article class="panel-card wide-card">
+          <div class="panel-heading"><div><p>MANAGER LEAGUE</p><h2>운용사별 ETF 현황</h2></div><span class="unit">시가총액 기준</span></div>
+          <div id="managerRanking" class="ranking-grid"></div>
+        </article>
+      </section>
+
+      <section id="marketPanel" class="analysis-panel" data-panel="market" aria-label="시장별 분석">
+        <article class="panel-card wide-card">
+          <div class="panel-heading"><div><p>MARKET MAP</p><h2>시장별 성과와 규모</h2></div><span class="unit">네이버 ETF 분류</span></div>
+          <div id="marketCards" class="market-grid"></div>
+        </article>
+      </section>
+
+      <section id="productPanel" class="analysis-panel" data-panel="product" aria-label="상품별 분석">
+        <article class="panel-card wide-card">
+          <div class="panel-heading"><div><p>PRODUCT STRATEGY</p><h2>상품 전략별 탐색</h2></div><span class="unit">상품명 기반 자동 분류</span></div>
+          <div id="productCards" class="strategy-grid"></div>
+        </article>
+      </section>
+
+      <section class="table-card" aria-labelledby="tableTitle">
+        <div class="table-heading">
+          <div><p>ETF SCREENER</p><h2 id="tableTitle">상품 조회</h2></div>
+          <div class="table-tools">
+            <span id="resultCount">0개 종목</span>
+            <label>표시
+              <select id="pageSize"><option value="20">20개</option><option value="50">50개</option><option value="100">100개</option></select>
+            </label>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th class="rank-col">#</th>
+                <th><button data-sort="itemname">상품명</button></th>
+                <th><button data-sort="nowVal">현재가</button></th>
+                <th><button data-sort="changeRate">일간</button></th>
+                <th><button data-sort="threeMonthEarnRate">3개월</button></th>
+                <th><button data-sort="quant">거래량</button></th>
+                <th><button data-sort="amonut">거래대금</button></th>
+                <th><button class="sorted desc" data-sort="marketSum">시가총액</button></th>
+                <th><button data-sort="navGap">NAV 괴리</button></th>
+              </tr>
+            </thead>
+            <tbody id="etfTableBody">
+              <tr><td colspan="9" class="loading-cell"><span class="loader"></span>ETF 데이터를 불러오고 있습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <button id="prevPage" type="button" aria-label="이전 페이지">← 이전</button>
+          <span id="pageInfo">1 / 1</span>
+          <button id="nextPage" type="button" aria-label="다음 페이지">다음 →</button>
+        </div>
+      </section>
+    </section>
+
+    <footer>
+      <div><strong>ETF Signal Board</strong><span>정보 탐색을 위한 분석 도구</span></div>
+      <p>데이터: 네이버 금융 ETF 시세 API · 제공 데이터는 지연되거나 변경될 수 있으며 투자 판단의 근거로 사용할 수 없습니다.</p>
+    </footer>
+  </main>
+
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="detailDrawer" class="detail-drawer" aria-hidden="true" aria-labelledby="drawerTitle">
+    <button id="closeDrawer" class="drawer-close" type="button" aria-label="상세 정보 닫기">×</button>
+    <div id="drawerContent"></div>
+  </aside>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

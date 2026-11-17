@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(SCRIPT_DIR);
 const OUTPUT = join(ROOT, "dist", "server");
+const PAGES_OUTPUT = join(ROOT, "dist", "pages");
 const [html, css, js] = await Promise.all([
   readFile(join(ROOT, "index.html"), "utf8"),
   readFile(join(ROOT, "styles.css"), "utf8"),
@@ -40,11 +41,15 @@ export default {
           headers: {
             "Content-Type": "application/octet-stream",
             "Cache-Control": "no-store, max-age=0",
-            "X-Content-Type-Options": "nosniff"
+            "X-Content-Type-Options": "nosniff",
+            "Access-Control-Allow-Origin": "*"
           }
         });
       } catch {
-        return Response.json({ error: "ETF 데이터를 불러오지 못했습니다." }, { status: 502 });
+        return Response.json(
+          { error: "ETF 데이터를 불러오지 못했습니다." },
+          { status: 502, headers: { "Access-Control-Allow-Origin": "*" } }
+        );
       }
     }
 
@@ -68,4 +73,11 @@ export default {
 
 await mkdir(OUTPUT, { recursive: true });
 await writeFile(join(OUTPUT, "index.js"), worker, "utf8");
-console.log("Built dist/server/index.js");
+await mkdir(PAGES_OUTPUT, { recursive: true });
+await Promise.all([
+  writeFile(join(PAGES_OUTPUT, "index.html"), html, "utf8"),
+  writeFile(join(PAGES_OUTPUT, "styles.css"), css, "utf8"),
+  writeFile(join(PAGES_OUTPUT, "app.js"), js, "utf8"),
+  writeFile(join(PAGES_OUTPUT, ".nojekyll"), "", "utf8")
+]);
+console.log("Built dist/server/index.js and dist/pages");
